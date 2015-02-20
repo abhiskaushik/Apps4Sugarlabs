@@ -1,0 +1,1100 @@
+<!--
+
+@abhishek
+17 feb . 
+A game made in fun.
+I was supposed to create ratchet mechanism
+for Physics JS for sugar-labs
+but to check probabilistic collisions
+i did someting random..
+hope u like
+-->
+
+<html>
+<head>
+
+</head>	
+
+<style>
+*{
+	padding: 0px;
+	margin: 0px;
+}
+body{
+	background-color: #222222;
+}
+#canvas{
+	background-color: #000000;
+	border-radius: 20px;
+	border: 5px solid #666666;
+}
+</style>
+
+<body>
+
+<canvas id="canvas"></canvas>
+ 
+<script>
+(function(){
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth * 0.9;
+canvas.height = window.innerHeight * 0.9;
+canvas.style.position = "absolute";
+canvas.style.left = (window.innerWidth-canvas.width)/2;
+canvas.style.top = (window.innerHeight-canvas.height)/2;
+//////////////////
+var visibleRange = 180;
+var scaleVal = 2;
+var gravityX = canvas.width/2;
+var gravityY = canvas.height/2;
+var initialRad = 150*scaleVal;
+var spacing = 100*scaleVal;
+//////////////////
+var entity;
+var jumpToggle = -1;
+var acc = 0.5;
+var maxSpeed = 1.25;  //2.5
+var entityRad = 10*scaleVal;
+var entityIX = gravityX;
+var entityIY = gravityY;
+//var entityIY = gravityY - initialRad - entityRad;
+//////////////////
+var currentRad = initialRad;
+//////////////////
+var keys = [];
+var gameInterval;
+var numRings = 3;
+//////////////////
+var viewPortX = gravityX;
+var viewPortY = gravityY - initialRad - entityRad;
+//////////////////
+var holeCreated = 0;
+var holeAngle = Math.random()*360;
+var prevHoleAngle = 90+180;
+var holeX = 0;
+var holeY = 0;
+var holeLoc = initialRad;
+var holeD;
+//////////////////
+var levelChange = 0;
+//////////////////
+var spikes = [];
+var numSpikes = 5;
+var spikeAngTemp = 0;
+var keepGenSpikes = 0;
+var spikeTotalAngleCovered = 0;
+var minPosSeparation = 40; //
+var curArcSeparation = 300*scaleVal;
+var curSameArcSeparation = 200*scaleVal;
+var minArcSeparation = 100*scaleVal;  //75
+var minSameArcSeparation = 30*scaleVal;  //75
+//////////////////
+var screenshots = [];
+var tempScreen;
+var timeDelay = 1;
+var curTime = 1;
+//////////////////
+//Death vars
+var spikeCreationValue = 90;
+var spikeHitIndex = 0;
+var canSwitchIndex = 0;
+var isDead = 0;
+var startonce = 0;
+var firstlevel = 1;
+var AchievedScore = 0;
+var pastUses = 0;
+//////////////////
+document.addEventListener("keydown", function (e) {
+    //console.log(e.keyCode);
+    //////////
+    //////////
+    /*if(e.keyCode == 65 && startonce==0) {
+    	startonce = 1;
+    	keys[39] = true;
+    	//resetVars();
+    	startGame();
+    	//gameState();
+    }*/
+    //////////
+    //////////
+    if(e.keyCode == 32) {
+    	if(jumpToggle == -1) {
+    		jumpToggle = 1;
+    	} else if(jumpToggle == 2) {
+    		jumpToggle = 0;
+    	}
+    	keys[e.keyCode] = true;
+    } else if(e.keyCode == 88 || e.keyCode == 90 || e.keyCode == 17) {
+    	keys[e.keyCode] = true;
+    }
+});
+document.addEventListener("keyup", function (e) {
+    //console.log(e.keyCode);
+    curTime = 1;
+    if(e.keyCode == 17)
+    	isDead = 0;
+    if(e.keyCode != 37 && e.keyCode != 39)
+    	keys[e.keyCode] = false;
+});
+document.addEventListener("click",startGame);
+function entryScreen1() {
+	////////
+	ctx.font=canvas.width/12.3 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","red");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","red");
+	ctx.fillStyle=gradient;
+	ctx.fillText("Sugar Spikes",canvas.width/2 - canvas.width/5.9,150);
+	////////
+	ctx.font=canvas.width/61.5 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","yellow");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","yellow");
+	ctx.fillStyle=gradient;
+	ctx.fillText("[SPACE] - Toggle Entity",canvas.width/2 - canvas.width/8.5,250);
+	////////
+	ctx.font=canvas.width/61.5 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","blue");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","blue");
+	ctx.fillStyle=gradient;
+	ctx.fillText("[Z/X] - Zoom In/Out",canvas.width/2 - canvas.width/10.25,300);
+	////////
+	ctx.font=canvas.width/61.5 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","red");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","red");
+	ctx.fillStyle=gradient;
+	ctx.fillText("[CTRL] - Go back for recovery",canvas.width/2 - canvas.width/6.6,350);
+	////////
+	ctx.font=canvas.width/24.6 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","blue");
+	gradient.addColorStop("0.5","red");
+	gradient.addColorStop("1.0","blue");
+	ctx.fillStyle=gradient;
+	//ctx.textAlign="center";
+	ctx.fillText("Click to play ",canvas.width/2 - canvas.width/5.8,450);
+	////////
+}
+function entryScreen2() {
+	
+	var tempValue = 19;
+	if(AchievedScore > 9)
+		tempValue = 11;
+	ctx.font=canvas.width/6.1 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","green");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","green");
+	ctx.fillStyle=gradient;
+	ctx.fillText(AchievedScore,canvas.width/2 - canvas.width/tempValue,150);
+	////////
+	ctx.font=canvas.width/12.3 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","green");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","green");
+	ctx.fillStyle=gradient;
+	ctx.fillText("Sugar Spikes",canvas.width/2 - canvas.width/5.9,250);
+	////////
+	ctx.font=canvas.width/61.5 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","green");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","green");
+	ctx.fillStyle=gradient;
+	ctx.fillText("[SPACE] - Toggle Entity",canvas.width/2 - canvas.width/8.5,350);
+	////////
+	ctx.font=canvas.width/61.5 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","green");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","green");
+	ctx.fillStyle=gradient;
+	ctx.fillText("[Z/X] - Zoom In/Out",canvas.width/2 - canvas.width/10.25,400);
+	////////
+	ctx.font=canvas.width/61.5 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","green");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","green");
+	ctx.fillStyle=gradient;
+	ctx.fillText("[CTRL] - Go back for recovery",canvas.width/2 - canvas.width/6.6,450);
+	////////
+	ctx.font=canvas.width/24.6 + "px Courier New";
+	var gradient=ctx.createLinearGradient(canvas.width/2 - canvas.width/5.9,0,canvas.width/2 + canvas.width/5.9,0);
+	gradient.addColorStop("0","green");
+	gradient.addColorStop("0.5","white");
+	gradient.addColorStop("1.0","green");
+	ctx.fillStyle=gradient;
+	ctx.fillText("CLICK TO Play",canvas.width/2 - canvas.width/5.8,550);
+	////////
+}
+function resetVars() {
+	canvas.width = window.innerWidth * 0.9;
+	canvas.height = window.innerHeight * 0.9;
+	canvas.style.left = (window.innerWidth-canvas.width)/2;
+	canvas.style.top = (window.innerHeight-canvas.height)/2;
+//////////////////
+	visibleRange = 180;
+	scaleVal = 2;
+	gravityX = canvas.width/2;
+	gravityY = canvas.height/2;
+	initialRad = 150*scaleVal;	
+	spacing = 100*scaleVal;
+//////////////////
+	jumpToggle = -1;
+	acc = 0.5;
+	maxSpeed = 1.25;  //2.5
+	entityRad = 10*scaleVal;
+	entityIX = gravityX;
+	entityIY = gravityY;
+//var entityIY = gravityY - initialRad - entityRad;
+//////////////////
+	currentRad = initialRad;
+//////////////////
+	keys = [];
+	numRings = 3;
+//////////////////
+	viewPortX = gravityX;
+	viewPortY = gravityY - initialRad - entityRad;
+//////////////////
+	holeCreated = 0;
+	holeAngle = Math.random()*360;
+	prevHoleAngle = 90+180;
+	holeX = 0;
+	holeY = 0;
+	holeLoc = initialRad;
+//////////////////
+	levelChange = 0;
+//////////////////
+	spikes = [];
+	numSpikes = 5;
+	spikeAngTemp = 0;
+	keepGenSpikes = 0;
+	spikeTotalAngleCovered = 0;
+	minPosSeparation = 40; //
+	curArcSeparation = 300*scaleVal;
+	curSameArcSeparation = 200*scaleVal;
+	minArcSeparation = 100*scaleVal;  //75
+	minSameArcSeparation = 30*scaleVal;  //75
+//////////////////
+	screenshots = [];
+	timeDelay = 1;
+	curTime = 1;
+//////////////////
+//Death vars
+	spikeCreationValue = 90;
+	spikeHitIndex = 0;
+	canSwitchIndex = 0;
+	isDead = 0;
+	startonce = 0;
+	firstlevel = 1;
+	AchievedScore = 0;
+	pastUses = 0;
+}
+function renderBackground() {
+	var iniRad = initialRad;
+	for(var i=0;i<numRings;i++) {
+		ctx.beginPath();
+		ctx.fillStyle="rgba(0,0,0,1)";
+		ctx.arc(gravityX,gravityY,iniRad,0,2*Math.PI);
+		ctx.stroke();
+		ctx.closePath();
+		iniRad += spacing;
+	}
+}
+function circleEntity(x,y,r,f,v,a) {
+	this.posX = x;
+	this.posY = y;
+	this.rad = r;
+	this.color = "rgba(0,0,0,1)";
+	this.friction = f;
+	this.v = v;
+	this.a = a;
+}
+function holeDef() {
+	this.orient = 0;
+	this.a = holeAngle;
+	this.off = 5 * ((initialRad+entity.rad)/(currentRad+spacing+entity.rad));
+	this.posX = viewPortX + (holeLoc+spacing)*Math.cos(this.a * Math.PI / 180);
+	this.posY = viewPortY + (holeLoc+spacing)*Math.sin(this.a * Math.PI / 180);
+	this.poslX = viewPortX + (holeLoc+spacing)*Math.cos((this.a-this.off) * Math.PI / 180);
+	this.poslY = viewPortY + (holeLoc+spacing)*Math.sin((this.a-this.off) * Math.PI / 180);
+	this.posrX = viewPortX + (holeLoc+spacing)*Math.cos((this.a+this.off) * Math.PI / 180);
+	this.posrY = viewPortY + (holeLoc+spacing)*Math.sin((this.a+this.off) * Math.PI / 180);
+	this.tipX = viewPortX + (holeLoc+spacing+spacing/2)*Math.cos(this.a * Math.PI / 180);
+	this.tipY = viewPortY + (holeLoc+spacing+spacing/2)*Math.sin(this.a * Math.PI / 180);
+}
+function spike() {
+	this.orient = parseInt(Math.random() * 2);
+	if(entity.v >= 0) {
+		if(spikes.length == 0) {
+			spikeAngTemp = calcSpikeSwitchDistanceAngle();
+			this.a = prevHoleAngle + spikeAngTemp;
+			//if(this.a%360 >= (holeAngle-spikeAngTemp)%360 && this.a%360 <= (holeAngle+spikeAngTemp)%360 && this.orient == 1)
+				//{this.a = prevHoleAngle + 2*spikeAngTemp;spikeTotalAngleCovered += spikeAngTemp;}
+		}
+		else if(this.orient != spikes[spikes.length-1].orient) {
+			spikeAngTemp = calcSpikeSwitchDistanceAngle();
+			this.a = spikes[spikes.length-1].a + spikeAngTemp;
+			///
+			if(holeCreated == 0 && spikeTotalAngleCovered >= spikeCreationValue) {
+				holeCreated = 1;
+				holeAngle = this.a - spikeAngTemp/2;
+				if(firstlevel != 1) {
+					createHole();
+				}
+			}
+			///
+			//if(this.a%360 >= (holeAngle-spikeAngTemp)%360 && this.a%360 <= (holeAngle+spikeAngTemp)%360 && this.orient == 1)
+				//{this.a = prevHoleAngle + 2*spikeAngTemp;spikeTotalAngleCovered += spikeAngTemp;}
+		}
+		else if(this.orient == spikes[spikes.length-1].orient) {
+			spikeAngTemp = calcSpikeSameDistanceAngle(this.orient);
+			this.a = spikes[spikes.length-1].a + spikeAngTemp;
+			//if(this.a%360 >= (holeAngle-spikeAngTemp)%360 && this.a%360 <= (holeAngle+spikeAngTemp)%360 && this.orient == 1)
+				//{this.a = prevHoleAngle + 2*spikeAngTemp;spikeTotalAngleCovered += spikeAngTemp;}
+		}
+		//this.a %= 360;
+	} else if(entity.v < 0) {
+		if(spikes.length == 0) {
+			spikeAngTemp = calcSpikeSwitchDistanceAngle();
+			this.a = prevHoleAngle - spikeAngTemp;
+			//if(this.a%360 >= (holeAngle-spikeAngTemp)%360 && this.a%360 <= (holeAngle+spikeAngTemp)%360 && this.orient == 1)
+				//{this.a = prevHoleAngle - 2*spikeAngTemp;spikeTotalAngleCovered += spikeAngTemp;}
+		}
+		else if(this.orient != spikes[spikes.length-1].orient) {
+			spikeAngTemp = calcSpikeSwitchDistanceAngle();
+			this.a = spikes[spikes.length-1].a - spikeAngTemp;
+			
+			////
+			if(holeCreated == 0 && spikeTotalAngleCovered >= spikeCreationValue) {
+				holeCreated = 1;
+				holeAngle = this.a + spikeAngTemp/2;
+				if(firstlevel != 1) {
+					createHole();
+				}
+			}
+			////
+			//if(this.a%360 >= (holeAngle-spikeAngTemp)%360 && this.a%360 <= (holeAngle+spikeAngTemp)%360 && this.orient == 1)
+				//{this.a = prevHoleAngle - 2*spikeAngTemp;spikeTotalAngleCovered += spikeAngTemp;}
+		}
+		else if(this.orient == spikes[spikes.length-1].orient) {
+			spikeAngTemp = calcSpikeSameDistanceAngle(this.orient);
+			this.a = spikes[spikes.length-1].a - spikeAngTemp;
+			//if(this.a%360 >= (holeAngle-spikeAngTemp)%360 && this.a%360 <= (holeAngle+spikeAngTemp)%360 && this.orient == 1)
+				//{this.a = prevHoleAngle - 2*spikeAngTemp;spikeTotalAngleCovered += spikeAngTemp;}
+		}
+		//this.a %= 360;
+		//if(entity.a <= 0) {
+		//	entity.a = 360 + entity.a;
+		//}
+	}
+	spikeTotalAngleCovered += spikeAngTemp;
+	if((spikeTotalAngleCovered+giveMaxCovered()) >= 360)
+		keepGenSpikes = 0;
+	if(this.orient == 0) {
+		this.off = 5 * ((initialRad+entity.rad)/(currentRad+entity.rad));
+		this.posX = viewPortX + (holeLoc)*Math.cos(this.a * Math.PI / 180);
+		this.posY = viewPortY + (holeLoc)*Math.sin(this.a * Math.PI / 180);
+		this.poslX = viewPortX + (holeLoc)*Math.cos((this.a-this.off) * Math.PI / 180);
+		this.poslY = viewPortY + (holeLoc)*Math.sin((this.a-this.off) * Math.PI / 180);
+		this.posrX = viewPortX + (holeLoc)*Math.cos((this.a+this.off) * Math.PI / 180);
+		this.posrY = viewPortY + (holeLoc)*Math.sin((this.a+this.off) * Math.PI / 180);
+		this.tipX = viewPortX + (holeLoc+spacing/2)*Math.cos(this.a * Math.PI / 180);
+		this.tipY = viewPortY + (holeLoc+spacing/2)*Math.sin(this.a * Math.PI / 180);
+	} else {
+		this.off = 5 * ((initialRad+entity.rad)/(currentRad+spacing+entity.rad));
+		this.posX = viewPortX + (holeLoc+spacing+entity.rad)*Math.cos(this.a * Math.PI / 180);
+		this.posY = viewPortY + (holeLoc+spacing+entity.rad)*Math.sin(this.a * Math.PI / 180);
+		this.poslX = viewPortX + (holeLoc+spacing+entity.rad)*Math.cos((this.a-this.off) * Math.PI / 180);
+		this.poslY = viewPortY + (holeLoc+spacing+entity.rad)*Math.sin((this.a-this.off) * Math.PI / 180);
+		this.posrX = viewPortX + (holeLoc+spacing+entity.rad)*Math.cos((this.a+this.off) * Math.PI / 180);
+		this.posrY = viewPortY + (holeLoc+spacing+entity.rad)*Math.sin((this.a+this.off) * Math.PI / 180);
+		this.tipX = viewPortX + (holeLoc+spacing/2)*Math.cos(this.a * Math.PI / 180);
+		this.tipY = viewPortY + (holeLoc+spacing/2)*Math.sin(this.a * Math.PI / 180);
+	}
+}
+function calcSpikeDistancePos(x1,y1,x2,y2) {
+	return Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2));
+}
+function calcSpikeSwitchDistanceAngle() {
+	return ((Math.random()*(curArcSeparation-minArcSeparation)+minArcSeparation)/(holeLoc))*180/Math.PI;
+}
+function calcSpikeSameDistanceAngle(o) {
+	if(o == 0) return ((Math.random()*(curSameArcSeparation-minSameArcSeparation)+minSameArcSeparation)/(holeLoc))*180/Math.PI;
+	else if(o == 1) return ((Math.random()*(curSameArcSeparation-minSameArcSeparation)+minSameArcSeparation)/(holeLoc+spacing))*180/Math.PI;
+}
+function giveMaxCovered() {
+	return (curArcSeparation/(holeLoc))*180/Math.PI;	
+}
+function pastSpike(a,lx,ly,rx,ry,tx,ty) {
+	this.a = a;
+	this.lx = lx;
+	this.ly = ly;
+	this.rx = rx;
+	this.ry = ry;
+	this.tx = tx;
+	this.ty = ty;
+}
+function screenshot() {
+	this.Sspikes = [];
+	for(var i=0;i<numSpikes;i++)
+		this.Sspikes.push(new pastSpike(spikes[i].a,spikes[i].poslX,spikes[i].poslY,spikes[i].posrX,spikes[i].posrY,spikes[i].tipX,spikes[i].tipY));
+	this.SminArcSeparation = minArcSeparation;
+	this.SminSameArcSeparation = minSameArcSeparation;
+	this.ScurArcSeparation = curArcSeparation;
+	this.ScurSameArcSeparation = curSameArcSeparation;
+	this.SentityPosX = entity.posX;
+	this.SentityPosY = entity.posY;
+	this.SentityRad = entity.rad;
+	this.SentityV = entity.v;
+	this.SentityA = entity.a;
+	this.SspikeHitIndex = spikeHitIndex;
+	this.ScanSwitchIndex = canSwitchIndex;
+	
+	this.SholeX = holeX;
+	this.SholeY = holeY;
+	this.SholeLoc = holeLoc;
+	this.SholelX = holeD.poslX;
+	this.SholelY = holeD.poslY;
+	this.SholerX = holeD.posrX;
+	this.SholerY = holeD.posrY;
+	this.SholetX = holeD.tipX;
+	this.SholetY = holeD.tipY;
+	this.SviewPortX = viewPortX;
+	this.SviewPortY = viewPortY;
+	this.SscaleVal = scaleVal; 
+	this.SinitialRad = initialRad;
+	this.Sspacing = spacing;
+	this.SjumpToggle = jumpToggle;
+	this.SentityRad = entityRad;
+	this.ScurrentRad = currentRad;
+}
+function reviveScreenshot() {
+	for(var i=0;i<numSpikes;i++) {
+		spikes[i].a = tempScreen.Sspikes[i].a;
+		spikes[i].poslX = tempScreen.Sspikes[i].lx;
+		spikes[i].poslY = tempScreen.Sspikes[i].ly;
+		spikes[i].posrX = tempScreen.Sspikes[i].rx;
+		spikes[i].posrY = tempScreen.Sspikes[i].ry;
+		spikes[i].tipX = tempScreen.Sspikes[i].tx;
+		spikes[i].tipY = tempScreen.Sspikes[i].ty;
+	}	
+	minArcSeparation = tempScreen.SminArcSeparation;
+	minSameArcSeparation = tempScreen.SminSameArcSeparation;
+	curArcSeparation = tempScreen.ScurArcSeparation;
+	curSameArcSeparation = tempScreen.ScurSameArcSeparation;
+	
+	entity.posX = tempScreen.SentityPosX;
+	entity.posY = tempScreen.SentityPosY;
+	entity.rad = tempScreen.SentityRad;
+	entity.v = tempScreen.SentityV;
+	entity.a = tempScreen.SentityA;
+	
+	spikeHitIndex = tempScreen.SspikeHitIndex;
+	canSwitchIndex = tempScreen.ScanSwitchIndex;
+	holeD.poslX = tempScreen.SholelX;
+	holeD.poslY = tempScreen.SholelY;
+	holeD.posrX = tempScreen.SholerX;
+	holeD.posrY = tempScreen.SholerY;
+	holeD.tipX = tempScreen.SholetX;
+	holeD.tipY = tempScreen.SholetY;
+	holeX = tempScreen.SholeX;
+	holeY = tempScreen.SholeY;
+	holeLoc = tempScreen.SholeLoc;
+	viewPortX = tempScreen.SviewPortX;
+	viewPortY = tempScreen.SviewPortY;
+	scaleVal = tempScreen.SscaleVal; 
+	initialRad = tempScreen.SinitialRad;
+	spacing = tempScreen.Sspacing;
+	jumpToggle = tempScreen.SjumpToggle;
+	entityRad = tempScreen.SentityRad;
+	currentRad = tempScreen.ScurrentRad;
+}
+function entitySpawn() {
+	//ctx2.scale(2,2);
+	entity = new circleEntity(entityIX,entityIY,entityRad,0.98,0,90);
+}
+function entityMoveAngular() {
+	if(keys[37]) {
+		if(entity.v > -1*maxSpeed) {
+			entity.v -= acc;
+		}
+	} 
+	if(keys[39]) {
+		if(entity.v < maxSpeed) {
+			entity.v += acc;
+		}
+	}
+	if(jumpToggle == 1) {
+		if(currentRad < (initialRad + spacing - 2*entity.rad)) {
+			currentRad += 5;
+		} else {
+			jumpToggle = 2;
+		}
+	} else if(jumpToggle == 0) {
+		if(currentRad > initialRad) {
+			currentRad -= 5;
+		} else {
+			jumpToggle = -1;
+		}
+	}
+	entity.v *= entity.friction;
+	entity.a += entity.v;
+	entity.posX = gravityX + (currentRad+entity.rad) * Math.cos(entity.a * Math.PI/180);
+	entity.posY = gravityY + (currentRad+entity.rad) * Math.sin(entity.a * Math.PI/180);
+}
+function entityMoveTranslation() {
+	if(keys[37]) {
+		if(entity.v > -1*maxSpeed) {
+			entity.v -= acc;
+		}
+	} 
+	if(keys[39]) {
+		if(entity.v < maxSpeed) {
+			entity.v += acc;
+		}
+	}
+	if(jumpToggle == 1) {
+		if(currentRad < (initialRad + spacing - 2*entity.rad)) {
+			currentRad += 5*scaleVal;
+		} else {
+			jumpToggle = 2;
+		}
+	} else if(jumpToggle == 0) {
+		if(currentRad > initialRad) {
+			currentRad -= 5*scaleVal;
+		} else {
+			jumpToggle = -1;
+		}
+	}
+	entity.v *= entity.friction;
+	entity.a += entity.v * ((initialRad+entity.rad)/(currentRad+entity.rad));
+	entity.posX = gravityX + (currentRad+entity.rad) * Math.cos(entity.a * Math.PI/180);
+	entity.posY = gravityY + (currentRad+entity.rad) * Math.sin(entity.a * Math.PI/180);
+	/*entity.v *= entity.friction;
+	entity.posX += entity.v;
+	entity.a = Math.acos((entity.posX - gravityX)/(currentRad+entity.rad))/Math.PI*180;
+	entity.posY = gravityY + (currentRad+entity.rad) * Math.sin(entity.a * Math.PI/180);
+	*/
+}
+function entityRender() {
+	ctx.beginPath();
+	//if(!keys[17])
+		ctx.fillStyle = "red";//entity.color;
+	//else
+		//ctx.fillStyle = "#444444";
+	ctx.arc(entity.posX,entity.posY,entity.rad,0,2 * Math.PI);
+	ctx.fill();
+	ctx.closePath();
+}
+function gameFocus1() {
+	var imageData = ctx.getImageData(entity.posX-canvas2.width/4,entity.posY-canvas2.height/4,canvas2.width/2,canvas2.height/2);
+	ctx3.clearRect(0,0,canvas3.width,canvas3.height);
+	canvas3.width = imageData.width;
+	canvas3.height = imageData.height;
+	ctx3.putImageData(imageData,0,0);
+	ctx2.drawImage(temp_canvas,0,0);
+}
+function gameFocus2() {
+	var x = initialRad;
+	var b =	(currentRad+entity.rad) - x + (canvas2.height/4);
+	var a = (currentRad+entity.rad) - x + (canvas2.width/4);
+	//console.log(a+" "+b+" ");
+	var focusX = gravityX + a * Math.cos(entity.a * Math.PI / 180);
+	var focusY = gravityY + b * Math.sin(entity.a * Math.PI / 180);
+	var imageData = ctx.getImageData(focusX-canvas2.width/4,focusY-canvas2.height/4,canvas2.width/2,canvas2.height/2);
+	ctx3.clearRect(0,0,canvas3.width,canvas3.height);
+	canvas3.width = imageData.width;
+	canvas3.height = imageData.height;
+	ctx3.putImageData(imageData,0,0);
+	ctx2.drawImage(temp_canvas,0,0);
+}
+function viewPort1() {
+	if(keys[37]) {
+		if(entity.v > -1*maxSpeed) {
+			entity.v -= acc;
+		}
+	} 
+	if(keys[39]) {
+		if(entity.v < maxSpeed) {
+			entity.v += acc;
+		}
+	}
+	if(jumpToggle == 1) {
+		if(currentRad < (initialRad + spacing - 2*entity.rad)) {
+			currentRad += 5*scaleVal;
+		} else {
+			jumpToggle = 2;
+		}
+	} else if(jumpToggle == 0) {
+		if(currentRad > initialRad) {
+			currentRad -= 5*scaleVal;
+		} else {
+			jumpToggle = -1;
+		}
+	}
+	entity.v *= entity.friction;
+	entity.a += entity.v * ((initialRad+entity.rad)/(currentRad+entity.rad));
+	viewPortX = gravityX + (currentRad+entity.rad) * Math.cos(entity.a * Math.PI/180);
+	viewPortY = gravityY + (currentRad+entity.rad) * Math.sin(entity.a * Math.PI/180);
+}
+function viewPort2() {
+	if(keys[90]) {              /////////// zoom out
+		if(scaleVal>0.5) {
+			curSameArcSeparation /= scaleVal;
+			curArcSeparation /= scaleVal;
+			minSameArcSeparation /= scaleVal;
+			minArcSeparation /= scaleVal;
+			currentRad /= scaleVal;
+			holeLoc /= scaleVal;
+			scaleVal -= 0.1;
+			currentRad *= scaleVal;
+			initialRad = 150*scaleVal;
+			spacing = 100*scaleVal;
+			entity.rad = 10*scaleVal;
+			entityRad = 10*scaleVal;
+			
+			//minArcSeparation = 100*scaleVal;
+			//minSameArcSeparation = 50*scaleVal;
+			holeLoc *= scaleVal;
+			minArcSeparation *= scaleVal;
+			minSameArcSeparation *= scaleVal;
+			curArcSeparation *= scaleVal;
+			curSameArcSeparation *= scaleVal;
+		}
+	}
+	else if(keys[88]) {              /////////// zoom in
+		if(scaleVal<3) {
+			curSameArcSeparation /= scaleVal;
+			curArcSeparation /= scaleVal;
+			minSameArcSeparation /= scaleVal;
+			minArcSeparation /= scaleVal;
+			currentRad /= scaleVal;
+			holeLoc /= scaleVal;
+			scaleVal += 0.1;
+			currentRad *= scaleVal;
+			initialRad = 150*scaleVal;
+			spacing = 100*scaleVal;
+			entity.rad = 10*scaleVal;
+			entityRad = 10*scaleVal;
+			//minArcSeparation = 100*scaleVal;
+			//minSameArcSeparation = 50*scaleVal;
+			holeLoc *= scaleVal;
+			minArcSeparation *= scaleVal;
+			minSameArcSeparation *= scaleVal;
+			curArcSeparation *= scaleVal;
+			curSameArcSeparation *= scaleVal;
+		}
+	}
+	if(keys[37]) {
+		if(entity.v > -1*maxSpeed) {
+			entity.v -= acc;
+		}
+	} 
+	if(keys[39]) {
+		if(entity.v < maxSpeed) {
+			entity.v += acc;
+		}
+	}
+	if(jumpToggle == 1) {
+		if(currentRad < (holeLoc + spacing - 2*entity.rad)) {
+			currentRad += 10*scaleVal;
+		} else {
+			currentRad = (holeLoc + spacing - 2*entity.rad);
+			jumpToggle = 2;
+		}
+	} else if(jumpToggle == 0) {
+		if(currentRad > holeLoc) {
+			currentRad -= 10*scaleVal;
+		} else {
+			currentRad = holeLoc;
+			jumpToggle = -1;
+		}
+	}
+	entity.v *= entity.friction;
+	entity.a += entity.v * ((initialRad+entity.rad)/(currentRad+entity.rad));
+	//entity.a %= 360;
+	//if(entity.v < 0 && entity.a <= 0) {
+	//	entity.a = 360 + entity.a;
+	//}
+	//viewPortX = gravityX + (currentRad+entity.rad) * Math.cos(entity.a * Math.PI/180);
+	//viewPortY = gravityY + (currentRad+entity.rad) * Math.sin(entity.a * Math.PI/180);
+	var x = 200;
+	var b =	(currentRad+entity.rad);// + (canvas.height/2);
+	var a = (currentRad+entity.rad) + x;// + (canvas.width/2);
+	//console.log(a+" "+b+" ");
+	viewPortX = gravityX + a * Math.cos(entity.a * Math.PI / 180);
+	viewPortY = gravityY + b * Math.sin(entity.a * Math.PI / 180);
+	holeX = viewPortX + (holeLoc + spacing)*Math.cos(holeAngle * Math.PI / 180);
+	holeY = viewPortY + (holeLoc + spacing)*Math.sin(holeAngle * Math.PI / 180);
+	entity.posX = gravityX + (currentRad+entity.rad-a) * Math.cos((entity.a-180) * Math.PI / 180);
+	entity.posY = gravityY + (currentRad+entity.rad-b) * Math.sin((entity.a-180) * Math.PI / 180);
+	manipSpike();
+	manipHole();
+}
+function renderBack() {
+	ctx.fillStyle="rgba(0,0,0,1)";
+	for(var i=initialRad;i<=currentRad+(numRings*spacing);i+=spacing) {
+		if((i+spacing)>=currentRad) {
+			ctx.beginPath();
+			ctx.arc(viewPortX,viewPortY,i,(entity.a-180-visibleRange)*Math.PI/180,(entity.a-180+visibleRange)*Math.PI/180);
+			ctx.stroke();
+			ctx.closePath();
+		}
+	}
+}
+function renderBack2() {
+	ctx.fillStyle="rgba(255,255,255,1)";
+	var i = holeLoc;
+	//for(var i=initialRad;i<=currentRad+(spacing);i+=spacing) {
+		//if((i+spacing)>=currentRad) {
+			ctx.beginPath();
+			ctx.moveTo(viewPortX+(i+spacing)*Math.cos((entity.a-180-visibleRange)*Math.PI/180),viewPortY+(i+spacing)*Math.sin((entity.a-180-visibleRange)*Math.PI/180));
+			ctx.arc(viewPortX,viewPortY,i,(entity.a-180-visibleRange)*Math.PI/180,(entity.a-180+visibleRange)*Math.PI/180,false);
+			//ctx.lineTo(viewPortX+(i+spacing)*Math.cos((entity.a-180-visibleRange)*Math.PI/180),viewPortY+(i+spacing)*Math.sin((entity.a-180-visibleRange)*Math.PI/180));
+			ctx.arc(viewPortX,viewPortY,i+spacing,(entity.a-180+visibleRange)*Math.PI/180,(entity.a-180-visibleRange)*Math.PI/180,true);
+			//ctx.lineTo(viewPortX+(i)*Math.cos((entity.a-180-visibleRange)*Math.PI/180),viewPortY+(i)*Math.sin((entity.a-180-visibleRange)*Math.PI/180));
+			ctx.closePath();
+			ctx.fill();
+		//	break;
+		//}
+	//}
+}
+function directionChange() {
+	keys[37] = !keys[37];
+	keys[39] = !keys[39];
+	entity.v *= -1;
+}
+function nextLevelCheck() {
+	if((holeX>=(entity.posX-entity.rad) && holeX<=(entity.posX+entity.rad)) && (holeY>=(entity.posY-entity.rad) && holeY<=(entity.posY+entity.rad))) {
+		//jumpToggle = -1;
+		levelChange = 1;
+		//currentRad = holeLoc + spacing;
+		//createHole();
+	}
+}
+function deathCheckwaste() {
+	if(spikeHitIndex >= spikes.length)
+		spikeHitIndex = 0;
+	if((entity.a+180)%360 >= (spikes[spikeHitIndex].a-spikes[spikeHitIndex].off)%360 && (entity.a+180)%360 <= (spikes[spikeHitIndex].a+spikes[spikeHitIndex].off)%360) {
+		canSwitchIndex = 1;
+		if((currentRad<=(holeLoc+spacing/2) && spikes[spikeHitIndex].orient==0) || (currentRad>=(holeLoc+spacing/2) && spikes[spikeHitIndex].orient==1)) {
+			entityDead();
+		}
+	}
+	if(entity.v > 0) {
+		if((entity.a+180)%360 > (spikes[spikeHitIndex].a+spikes[spikeHitIndex].off)%360 && canSwitchIndex != 0) {
+			spikeHitIndex++;
+			canSwitchIndex = 0;
+		}
+	} else {
+		if((entity.a+180)%360 < (spikes[spikeHitIndex].a-spikes[spikeHitIndex].off)%360 && canSwitchIndex != 0) {
+			spikeHitIndex++;
+			canSwitchIndex = 0;
+		}
+	}
+}
+function deathCheck2() {
+	if(spikeHitIndex >= spikes.length)
+		spikeHitIndex = 0;
+	if((entity.a+180) >= (spikes[spikeHitIndex].a-spikes[spikeHitIndex].off) && (entity.a+180) <= (spikes[spikeHitIndex].a+spikes[spikeHitIndex].off)) {
+		canSwitchIndex = 1;
+		if((currentRad<=(holeLoc+spacing/2) && spikes[spikeHitIndex].orient==0) || (currentRad>=(holeLoc+spacing/2) && spikes[spikeHitIndex].orient==1)) {
+			entityDead();
+		}
+	}
+	if(entity.v > 0) {
+		if((entity.a+180) > (spikes[spikeHitIndex].a+spikes[spikeHitIndex].off) && canSwitchIndex != 0) {
+			spikes[spikeHitIndex].a += 360;
+			spikeHitIndex++;
+			canSwitchIndex = 0;
+		}
+	} else {
+		if((entity.a+180) < (spikes[spikeHitIndex].a-spikes[spikeHitIndex].off) && canSwitchIndex != 0) {
+			spikes[spikeHitIndex].a -= 360;
+			spikeHitIndex++;
+			canSwitchIndex = 0;
+		}
+	}
+}
+function entityDead() {
+	pastUses++;
+	isDead = 1;
+	if(pastUses == 5) {
+		clearInterval(gameInterval);
+		gameOver();
+	}
+}
+function gameOver() {
+	///////
+	FBShareOp();
+	//////
+	ctx.clearRect(0,0,canvas.width,canvas.height);
+	document.addEventListener("click",startGame);
+	entryScreen2();
+}
+function createHole() {
+	holeLoc += spacing;
+	holeD = new holeDef();
+}
+function renderHole2() {
+	ctx.fillStyle = "#FFFFFF";
+	ctx.beginPath();
+	ctx.moveTo(holeD.poslX,holeD.poslY);
+	ctx.lineTo(holeD.tipX,holeD.tipY);
+	ctx.lineTo(holeD.posrX,holeD.posrY);
+	ctx.lineTo(holeD.poslX,holeD.poslY);
+	ctx.fill();
+	ctx.closePath();
+}
+function renderHole() {
+	ctx.beginPath();
+	ctx.fillStyle = "red";
+	ctx.arc(holeX,holeY,10,0,2*Math.PI);
+	ctx.fill();
+	ctx.closePath();
+}
+function manipSpike() {
+	for(var i=0;i<spikes.length;i++) {
+		if(spikes[i].orient == 0) {
+			spikes[i].posX = viewPortX + (holeLoc)*Math.cos(spikes[i].a * Math.PI / 180);
+			spikes[i].posY = viewPortY + (holeLoc)*Math.sin(spikes[i].a * Math.PI / 180);
+			spikes[i].off = 5 * ((initialRad+entity.rad)/(currentRad+entity.rad));
+			spikes[i].poslX = viewPortX + (holeLoc)*Math.cos((spikes[i].a-spikes[i].off) * Math.PI / 180);
+			spikes[i].poslY = viewPortY + (holeLoc)*Math.sin((spikes[i].a-spikes[i].off) * Math.PI / 180);
+			spikes[i].posrX = viewPortX + (holeLoc)*Math.cos((spikes[i].a+spikes[i].off) * Math.PI / 180);
+			spikes[i].posrY = viewPortY + (holeLoc)*Math.sin((spikes[i].a+spikes[i].off) * Math.PI / 180);
+			spikes[i].tipX = viewPortX + (holeLoc+spacing/2)*Math.cos(spikes[i].a * Math.PI / 180);
+			spikes[i].tipY = viewPortY + (holeLoc+spacing/2)*Math.sin(spikes[i].a * Math.PI / 180);
+		} else {
+			spikes[i].posX = viewPortX + (holeLoc+spacing+entity.rad)*Math.cos(spikes[i].a * Math.PI / 180);
+			spikes[i].posY = viewPortY + (holeLoc+spacing+entity.rad)*Math.sin(spikes[i].a * Math.PI / 180);
+			spikes[i].off = 5 * ((initialRad+entity.rad)/(currentRad+spacing+entity.rad));
+			spikes[i].poslX = viewPortX + (holeLoc+spacing+entity.rad)*Math.cos((spikes[i].a-spikes[i].off) * Math.PI / 180);
+			spikes[i].poslY = viewPortY + (holeLoc+spacing+entity.rad)*Math.sin((spikes[i].a-spikes[i].off) * Math.PI / 180);
+			spikes[i].posrX = viewPortX + (holeLoc+spacing+entity.rad)*Math.cos((spikes[i].a+spikes[i].off) * Math.PI / 180);
+			spikes[i].posrY = viewPortY + (holeLoc+spacing+entity.rad)*Math.sin((spikes[i].a+spikes[i].off) * Math.PI / 180);
+			spikes[i].tipX = viewPortX + (holeLoc+spacing/2)*Math.cos(spikes[i].a * Math.PI / 180);
+			spikes[i].tipY = viewPortY + (holeLoc+spacing/2)*Math.sin(spikes[i].a * Math.PI / 180);
+		}
+	}
+}
+function manipHole() {
+	holeD.posX = viewPortX + (holeLoc+spacing)*Math.cos(holeD.a * Math.PI / 180);
+	holeD.posY = viewPortY + (holeLoc+spacing)*Math.sin(holeD.a * Math.PI / 180);
+	holeD.off = 5 * ((initialRad+entity.rad)/(currentRad+entity.rad+spacing));
+	holeD.poslX = viewPortX + (holeLoc+spacing)*Math.cos((holeD.a-holeD.off) * Math.PI / 180);
+	holeD.poslY = viewPortY + (holeLoc+spacing)*Math.sin((holeD.a-holeD.off) * Math.PI / 180);
+	holeD.posrX = viewPortX + (holeLoc+spacing)*Math.cos((holeD.a+holeD.off) * Math.PI / 180);
+	holeD.posrY = viewPortY + (holeLoc+spacing)*Math.sin((holeD.a+holeD.off) * Math.PI / 180);
+	holeD.tipX = viewPortX + (holeLoc+spacing+spacing/2)*Math.cos(holeD.a * Math.PI / 180);
+	holeD.tipY = viewPortY + (holeLoc+spacing+spacing/2)*Math.sin(holeD.a * Math.PI / 180);
+}
+function genSpikes() {
+	var tempSpike;
+	spikeHitIndex = 0;
+	keepGenSpikes = 1;
+	spikeTotalAngleCovered = 0;
+	canSwitchIndex = 0;
+	spikes = [];
+	numSpikes = 0;
+	spikes.push(new spike());
+	while(spikes.length > 0 && keepGenSpikes == 1)
+		spikes.push(new spike());
+	numSpikes = spikes.length;
+}
+function renderSpike() {
+	//if(!keys[17])
+		ctx.fillStyle = "black";
+	//else
+		//ctx.fillStyle = "#444444";
+	for(var i=0;i<spikes.length;i++) {
+		ctx.beginPath();
+		ctx.moveTo(spikes[i].poslX,spikes[i].poslY);
+		ctx.lineTo(spikes[i].tipX,spikes[i].tipY);
+		ctx.lineTo(spikes[i].posrX,spikes[i].posrY);
+		ctx.lineTo(spikes[i].poslX,spikes[i].poslY);
+		ctx.fill();
+		ctx.closePath();
+	}
+}
+function present() {
+	ctx.clearRect(0,0,canvas.width,canvas.height);
+	if(levelChange == 0) {
+		viewPort2();
+		renderBack2();
+		entityRender();
+		renderHole();
+		renderSpike();
+		deathCheck2();
+		nextLevelCheck();
+	} else if(levelChange == 1) {
+		if(visibleRange >= 5) {
+			visibleRange -= 2;
+			renderBack2();
+			entityRender();
+			renderHole();
+			renderSpike();
+		} else {
+			levelChange = 2;
+			directionChange();
+			//currentRad = holeLoc + spacing;
+			currentRad = holeLoc + 2*spacing - 2*entity.rad;
+			//createHole();
+			numSpikes += 5;
+			entity.a = (entity.a+180)%360;
+			prevHoleAngle = entity.a + 180;
+			genSpikes();
+			screenshots = [];
+		}
+	} else if(levelChange == 2) {
+		if(visibleRange <= 175) {
+			visibleRange += 2;
+			viewPort2();
+			renderBack2();
+			entityRender();
+			renderHole();
+			renderSpike();
+			deathCheck2();
+		} else {
+			visibleRange = 180;
+			levelChange = 0;
+		}
+	}
+	screenshots.push(new screenshot());
+} 
+function present2() {
+	ctx.clearRect(0,0,canvas.width,canvas.height);
+	if(levelChange == 0) {
+		viewPort2();
+		renderBack2();
+		entityRender();
+		renderHole2();
+		renderSpike();
+		deathCheck2();
+		nextLevelCheck();
+	} else if(levelChange == 1) {
+		/*if(visibleRange >= 5) {
+			visibleRange -= 2;
+			renderBack2();
+			entityRender();
+			renderHole();
+			renderSpike();
+		} else {*/
+			holeCreated = 0;
+			firstlevel--;
+			if(firstlevel == -1) {
+				spikeCreationValue = 180;
+				maxSpeed = 1.5;
+				curArcSeparation = curArcSeparation - (curArcSeparation-minArcSeparation)/2;
+				curSameArcSeparation = curSameArcSeparation - (curSameArcSeparation-minSameArcSeparation)/2;
+			}
+			else if(firstlevel == -4) {
+				spikeCreationValue = 230;
+				maxSpeed = 1.75;
+				curArcSeparation = curArcSeparation - (curArcSeparation-minArcSeparation)/2;
+				curSameArcSeparation = curSameArcSeparation - (curSameArcSeparation-minSameArcSeparation)/2;
+			}
+			else if(firstlevel == -7) {
+				spikeCreationValue = 270;
+				maxSpeed = 2;
+				curArcSeparation = curArcSeparation - (curArcSeparation-minArcSeparation)/2;
+				curSameArcSeparation = curSameArcSeparation - (curSameArcSeparation-minSameArcSeparation)/2;
+			}
+			AchievedScore++;
+			levelChange = 0;
+			directionChange();
+			//currentRad = holeLoc + spacing;
+			currentRad = holeLoc + 2*spacing - 2*entity.rad;
+			//createHole();
+			numSpikes += 5;
+			entity.a = (entity.a+180)%360;
+			prevHoleAngle = entity.a + 180;
+			genSpikes();
+			screenshots = [];
+		//}
+	} else if(levelChange == 2) {
+		if(visibleRange <= 175) {
+			visibleRange += 2;
+			viewPort2();
+			renderBack2();
+			entityRender();
+			renderHole();
+			renderSpike();
+			deathCheck2();
+		} else {
+			visibleRange = 180;
+			levelChange = 0;
+		}
+	}
+	screenshots.push(new screenshot());
+}
+function past() {
+	if(screenshots.length > 0 && curTime==timeDelay) {
+		tempScreen = screenshots[screenshots.length - 1];
+		reviveScreenshot();
+	
+		ctx.fillStyle="rgba(10,10,10,0.3)";
+		ctx.fillRect(0,0,canvas.width,canvas.height);
+		renderBack2();
+		entityRender();
+		renderHole2();
+		renderSpike();
+		
+		screenshots.pop();
+		curTime = 0;
+	} else {
+		curTime++;
+	}
+}
+function gameState() {
+	//ctx.fillStyle="rgba(255,255,255,0.8)";
+	//ctx.fillRect(0,0,canvas.width,canvas.height);
+	//ctx2.clearRect(0,0,canvas2.width,canvas2.height);
+	/*if(initialRad < 2) {
+		initialRad += spacing - 2;
+		currentRad += spacing - 2; 
+	} else {
+		initialRad -= 2;
+		currentRad -= 2;
+	}*/
+	//renderBackground();
+	//entityMoveAngular();
+	//entityMoveTranslation();
+	if(isDead==0) present2();
+	else if(keys[17] && isDead==1) {
+		past();
+	}
+	//gameFocus1();
+	//gameFocus2();
+	//gameFocus3();
+	//setTimeout(function(){gameState();},34);
+}
+function startGame() {
+	//console.log("yo");
+	resetVars();
+	document.removeEventListener("click",startGame);
+	startonce = 1;
+    keys[39] = true;
+	entitySpawn();
+	genSpikes();
+	holeD = new holeDef();
+	gameInterval = setInterval(gameState,17);
+}
+//entityRender();
+//gameState();
+
+entryScreen1();
+})();
+</script>
+</body>
+</html>
