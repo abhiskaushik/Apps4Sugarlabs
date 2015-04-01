@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <style type="text/css">
+  .buttons{
+
+//height: 45px;
+width: 50px;
+padding-top: 5px;
+background-color: #87DFCC;
+border: 2px blue solid;
+border-radius: 10px;
+text-align: center;
+font-family: Georgia, "Times New Roman", Times, serif;
+//font-size: 18px;
+color: red;
+cursor: default;
+  //height:25px;
+  //width:100px;
+  float: right;
+}
+.times{
+ height: 45px;
+width: 200px;
+//padding-top: 5px;
+background-color: black;
+
+text-align: center;
+font-family: Georgia, "Times New Roman", Times, serif;
+font-size: 38px;
+color: white;
+position: relative;
+left:7%;
+}
+
+</style>
+<script>
+//returns dom for given id.
+var dom=function(id){
+return document.getElementById(id);
+}
+
+
+//is user trying to type alphabets ?
+function isNumber(ev,inp){
+ ev=(ev)?ev:window.event;
+ var code=(ev.which)?ev.which:ev.keyCode;
+  var keyValue=(String.fromCharCode(ev.keyCode));
+  if(code>31 && code <48 || code >57){
+    console.log(keyValue);
+     
+    //if(inp=='hr'){
+      //if(dom(inp).value<0 && dom(inp).value>25)
+     return false; }
+
+    //else if(input=='min'){if(keyValue<0 && keyValue>60)
+     //return false;
+    //}
+
+return true;
+
+}
+
+
+
+</script>
+
+
+</head>
+<canvas id="canvas" width="400" height="400"
+style="background-color:#D75873;">
+</canvas>
+<script>
+
+var canvas = dom("canvas"),
+ctx = canvas.getContext("2d"),
+radius = canvas.height / 2;
+
+ctx.translate(radius, radius);
+radius = radius * 0.90
+
+
+function drawFace(ctx, radius) {
+  
+  ctx.beginPath();
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0-radius,0-radius,2*radius,2*radius);
+  ctx.lineWidth = radius*0.1;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, radius*0.1, 0, 2*Math.PI);
+  ctx.fillStyle = 'red';
+  ctx.fill();
+
+}
+
+function drawNumbers(ctx, radius) {
+  var ang;
+  var num;
+  ctx.font = radius*0.15 + "px arial";
+  ctx.textBaseline="middle";
+  ctx.textAlign="center";
+ var temp=-2;
+ var radius_factor=0.85;
+  for(num = 1; num < 13; num++){
+    ang = temp* Math.PI / 6;
+    ctx.fillText(num.toString(), radius_factor*radius*Math.cos(ang),radius_factor*radius*Math.sin(ang));  
+    
+     temp++;
+
+  
+  }
+
+}
+
+function drawTime(ctx, radius){
+    var now = new Date();
+    var hour = now.getHours();
+    var minute = now.getMinutes();
+    var second = now.getSeconds();
+    //hour
+    hour=hour%12;
+    hour=(hour*Math.PI/6)+
+    (minute*Math.PI/(6*60))+
+    (second*Math.PI/(360*60));
+    drawHand(ctx, hour, radius*0.5, radius*0.07,'black');
+    //minute
+    minute=(minute*Math.PI/30)+(second*Math.PI/(30*60));
+    drawHand(ctx, minute, radius*0.68, radius*0.04,'green');
+    // second
+    second=(second*Math.PI/30);
+    drawHand(ctx, second, radius*0.7, radius*0.02,'lightblue');
+}
+
+function drawHand(ctx, pos, length, width,color) {
+    ctx.beginPath();
+    ctx.lineWidth = width;
+    ctx.lineCap = "round";
+    ctx.moveTo(0,0);
+    ctx.rotate(pos);
+    ctx.lineTo(0, -length);
+    ctx.strokeStyle=color;
+    ctx.stroke();
+    ctx.rotate(-pos);
+
+}
+
+
+function drawClock() {
+  drawFace(ctx, radius); // un-necessary step, needs opitimization..
+  drawNumbers(ctx, radius);
+  drawTime(ctx, radius);
+}
+
+var drawC=setInterval(drawClock,1);
+
+var hrsT;
+var minsT;
+
+var animateHRTimer;
+var animateMINTimer;
+
+function animateMIN(){
+  //var ctx=dom('canvas').getContext('2d');
+ // ctx.translate(-2*radius,-2*radius);
+  //var h=dom('hr').value;
+  var m=dom('min').value;
+  var min_angle= 6*m;
+ if((180/Math.PI)*minsT>=min_angle)
+   clearInterval(animateMINTimer);
+
+//ctx.clearRect(0-radius,0-radius,400,400);
+//clearInterval(drawC);
+drawFace(ctx,radius);
+drawNumbers(ctx,radius);
+
+drawHand(ctx, hrsT, radius*0.5, radius*0.07);
+drawHand(ctx,minsT,radius*0.75,radius*0.04);
+//hrsT+=  Math.PI/180;
+minsT+=Math.PI/180;
+}
+
+function animateHR(){
+  //var ctx=dom('canvas').getContext('2d');
+ // ctx.translate(-2*radius,-2*radius);
+  var h=dom('hr').value; h=h%12;
+  var m=dom('min').value; m=m%60;
+  var hr_angle= (h*60+m*1)/2;
+ if((180/Math.PI)*hrsT>=hr_angle){
+   clearInterval(animateHRTimer);
+    animateMINTimer=setInterval(animateMIN,10);
+
+ }
+
+//ctx.clearRect(0-radius,0-radius,400,400);
+//clearInterval(drawC);
+drawFace(ctx,radius);
+drawNumbers(ctx,radius);
+
+drawHand(ctx, hrsT, radius*0.5, radius*0.07);
+drawHand(ctx,minsT,radius*0.75,radius*0.04);
+hrsT+=  Math.PI/180;
+//minsT+=Math.PI/180;
+}
+
+
+
+
+
+
+
+function calculateAngle(h,m){
+ //console.log(h);
+ //console.log(m);
+ //if(hr==12)hr=0;
+ //if(min==60)min=0;
+  h=h%12;
+ var hr_angle= (h*60+m*1)/2;
+  //console.log(hr_angle);
+
+ var min_angle=6*m;
+ 
+ var angle=Math.abs(hr_angle - min_angle);
+
+ //return
+ var ans= angle<(360-angle)?angle:(360-angle);
+ //var temp=0;
+ //var animateDegress=function(){
+   // if(temp>=ans){
+    //clearInterval(aniDegreeTimer);
+  //}
+
+ dom('screen').innerHTML=ans+'&#176';
+ //temp+=1;
+
+
+//var aniDegreeTimer=setInterval(animateDegress,100);
+
+ ctx.clearRect(0-radius,0-radius,400,400);
+ clearInterval(drawC);
+
+//drawFace(ctx,radius);
+//drawNumbers(ctx,radius);
+hrsT=0; minsT=0;
+clearInterval(animateHRTimer);
+clearInterval(animateMINTimer);
+
+  animateHRTimer=setInterval(animateHR,10);
+//var animateMINTimer=setInterval(animateMIN,10);
+}
+
+function reset(){
+  window.location.href="";
+}
+
+
+
+
+
+</script>
+
+<body>
+ <br> 
+<div id="screen" style="position:absolute;left:50%;top:10%;height:200px;width:400px;font-family:Georgia;font-size:100px" class="buttons">Angle</div>
+<p style="position:absolute;left:40%;top:50%">* Web Simulation that shows angle between Hour Hand & Minute
+Hands of a Clock<br>
+* Enter Valid Hour and Minute to check the Angle.<br>
+* &copy Abhishek.
+ </p>
+
+<input type="text" class="times" id='hr' autofocus placeholder="Enter Hour" min='0' max='24' maxlength='2'
+ onkeypress="return isNumber(event,'hr',this)"><br>
+<input type="text" class="times" id='min' placeholder="Enter Mins" min='0' max='60' maxlength='2'
+  onkeypress="return isNumber(event,'min',this)">
+<div class="times" id="cal" style="cursor:default" onclick="calculateAngle(dom('hr').value,dom('min').value)" >Calculate</div><br>
+<div class="times" id="reset" style="cursor:default" onclick="reset()" >Reset</div>
+
+</body>
+</html>
