@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
- <style type="text/css">
-  .buttons{
+<style type="text/css">
 
-//height: 45px;
+.buttons{
+
 width: 50px;
 padding-top: 5px;
 background-color: #87DFCC;
@@ -12,19 +12,17 @@ border: 2px blue solid;
 border-radius: 10px;
 text-align: center;
 font-family: Georgia, "Times New Roman", Times, serif;
-//font-size: 18px;
 color: red;
 cursor: default;
-  //height:25px;
-  //width:100px;
-  float: right;
-}
-.times{
- height: 45px;
-width: 200px;
-//padding-top: 5px;
-background-color: black;
+float: right;
 
+}
+
+.times{
+height: 45px;
+width: 200px;
+padding-top: 5px;
+background-color: black;
 text-align: center;
 font-family: Georgia, "Times New Roman", Times, serif;
 font-size: 38px;
@@ -35,33 +33,24 @@ left:7%;
 
 </style>
 <script>
-//returns dom for given id.
+
+/*returns dom for given id */
 var dom=function(id){
 return document.getElementById(id);
 }
 
-
-//is user trying to type alphabets ?
+/*is user trying to type alphabets */
 function isNumber(ev,inp){
  ev=(ev)?ev:window.event;
  var code=(ev.which)?ev.which:ev.keyCode;
-  var keyValue=(String.fromCharCode(ev.keyCode));
+ var keyValue=(String.fromCharCode(ev.keyCode));
   if(code>31 && code <48 || code >57){
-    console.log(keyValue);
-     
-    //if(inp=='hr'){
-      //if(dom(inp).value<0 && dom(inp).value>25)
-     return false; }
-
-    //else if(input=='min'){if(keyValue<0 && keyValue>60)
-     //return false;
-    //}
+     return false;
+  }
 
 return true;
 
 }
-
-
 
 </script>
 
@@ -79,7 +68,7 @@ radius = canvas.height / 2;
 ctx.translate(radius, radius);
 radius = radius * 0.90
 
-
+/* draw the face of the clock */
 function drawFace(ctx, radius) {
   
   ctx.beginPath();
@@ -91,28 +80,26 @@ function drawFace(ctx, radius) {
   ctx.arc(0, 0, radius*0.1, 0, 2*Math.PI);
   ctx.fillStyle = 'red';
   ctx.fill();
-
 }
 
+/* draw all numbers that represents hrs/min/sec */
 function drawNumbers(ctx, radius) {
   var ang;
   var num;
   ctx.font = radius*0.15 + "px arial";
   ctx.textBaseline="middle";
   ctx.textAlign="center";
- var temp=-2;
- var radius_factor=0.85;
+  var temp=-2;
+  var radius_factor=0.85;
   for(num = 1; num < 13; num++){
     ang = temp* Math.PI / 6;
     ctx.fillText(num.toString(), radius_factor*radius*Math.cos(ang),radius_factor*radius*Math.sin(ang));  
     
      temp++;
-
-  
-  }
-
+}
 }
 
+/* draw the exact times with hands */
 function drawTime(ctx, radius){
     var now = new Date();
     var hour = now.getHours();
@@ -132,6 +119,7 @@ function drawTime(ctx, radius){
     drawHand(ctx, second, radius*0.7, radius*0.02,'lightblue');
 }
 
+/* draw any hand of clock */
 function drawHand(ctx, pos, length, width,color) {
     ctx.beginPath();
     ctx.lineWidth = width;
@@ -145,7 +133,7 @@ function drawHand(ctx, pos, length, width,color) {
 
 }
 
-
+/* the master method to draw*/
 function drawClock() {
   drawFace(ctx, radius); // un-necessary step, needs opitimization..
   drawNumbers(ctx, radius);
@@ -154,35 +142,34 @@ function drawClock() {
 
 var drawC=setInterval(drawClock,1);
 
-var hrsT;
-var minsT;
+/* Some Globals */
+var hrsT,
+    minsT,
+   animateHRTimer,
+   animateMINTimer;
 
-var animateHRTimer;
-var animateMINTimer;
-
+/* animate the minute hand */
 function animateMIN(){
-  //var ctx=dom('canvas').getContext('2d');
- // ctx.translate(-2*radius,-2*radius);
-  //var h=dom('hr').value;
   var m=dom('min').value;
   var min_angle= 6*m;
- if((180/Math.PI)*minsT>=min_angle)
+  
+  if((180/Math.PI)*minsT>=min_angle)
    clearInterval(animateMINTimer);
 
-//ctx.clearRect(0-radius,0-radius,400,400);
-//clearInterval(drawC);
-drawFace(ctx,radius);
-drawNumbers(ctx,radius);
 
-drawHand(ctx, hrsT, radius*0.5, radius*0.07);
-drawHand(ctx,minsT,radius*0.75,radius*0.04);
-//hrsT+=  Math.PI/180;
-minsT+=Math.PI/180;
-}
+   drawFace(ctx,radius);
+   drawNumbers(ctx,radius);
 
+   drawHand(ctx, hrsT, radius*0.5, radius*0.07);
+   drawHand(ctx,minsT,radius*0.75,radius*0.04);
+
+  minsT+=Math.PI/180;
+
+ }
+
+/* animate the hour hand */
 function animateHR(){
-  //var ctx=dom('canvas').getContext('2d');
- // ctx.translate(-2*radius,-2*radius);
+
   var h=dom('hr').value; h=h%12;
   var m=dom('min').value; m=m%60;
   var hr_angle= (h*60+m*1)/2;
@@ -192,15 +179,13 @@ function animateHR(){
 
  }
 
-//ctx.clearRect(0-radius,0-radius,400,400);
-//clearInterval(drawC);
 drawFace(ctx,radius);
 drawNumbers(ctx,radius);
 
 drawHand(ctx, hrsT, radius*0.5, radius*0.07);
 drawHand(ctx,minsT,radius*0.75,radius*0.04);
 hrsT+=  Math.PI/180;
-//minsT+=Math.PI/180;
+
 }
 
 
@@ -210,43 +195,22 @@ hrsT+=  Math.PI/180;
 
 
 function calculateAngle(h,m){
- //console.log(h);
- //console.log(m);
- //if(hr==12)hr=0;
- //if(min==60)min=0;
+
   h=h%12;
- var hr_angle= (h*60+m*1)/2;
-  //console.log(hr_angle);
-
- var min_angle=6*m;
+  var hr_angle= (h*60+m*1)/2,
+      min_angle=6*m,
+      angle=Math.abs(hr_angle - min_angle),
+      ans= angle<(360-angle)?angle:(360-angle);
  
- var angle=Math.abs(hr_angle - min_angle);
-
- //return
- var ans= angle<(360-angle)?angle:(360-angle);
- //var temp=0;
- //var animateDegress=function(){
-   // if(temp>=ans){
-    //clearInterval(aniDegreeTimer);
-  //}
-
  dom('screen').innerHTML=ans+'&#176';
- //temp+=1;
-
-
-//var aniDegreeTimer=setInterval(animateDegress,100);
-
  ctx.clearRect(0-radius,0-radius,400,400);
  clearInterval(drawC);
+ hrsT=0; minsT=0;
+ clearInterval(animateHRTimer);
+ clearInterval(animateMINTimer);
 
-//drawFace(ctx,radius);
-//drawNumbers(ctx,radius);
-hrsT=0; minsT=0;
-clearInterval(animateHRTimer);
-clearInterval(animateMINTimer);
+ animateHRTimer=setInterval(animateHR,10);
 
-  animateHRTimer=setInterval(animateHR,10);
-//var animateMINTimer=setInterval(animateMIN,10);
 }
 
 function reset(){
