@@ -1,0 +1,166 @@
+<!--
+hash table animation..
+find number of unique elements
+in a given array.
+
+
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+
+.buttons{
+
+width: 50px;
+padding-top: 5px;
+background-color: #87DFCC;
+border: 2px blue solid;
+border-radius: 10px;
+text-align: center;
+font-family: Georgia, "Times New Roman", Times, serif;
+color: red;
+cursor: default;
+float: right;
+
+}
+
+.times{
+height: 45px;
+width: 200px;
+padding-top: 5px;
+background-color: black;
+text-align: center;
+font-family: Georgia, "Times New Roman", Times, serif;
+font-size: 38px;
+color: white;
+position: relative;
+left:7%;
+}
+
+</style>
+<script>
+
+/*returns dom for given id */
+var dom=function(id){
+return document.getElementById(id);
+}
+
+/*is user trying to type alphabets */
+function isNumber(ev,inp){
+ ev=(ev)?ev:window.event;
+ var code=(ev.which)?ev.which:ev.keyCode;
+ var keyValue=(String.fromCharCode(ev.keyCode));
+  if(code>31 && code <48 || code>57){
+     return false;
+  }
+
+
+return true;
+}
+
+</script>
+
+</head>
+<div id="canvas" 
+style="background-color:#D75873;position:absolute;width:1200px;height:400px;font-size:50px"> Hash Table
+</div>
+<script>
+
+function createHashTable(){
+  
+ var canvas = document.getElementById("canvas");
+      
+    var table = document.createElement('TABLE');
+    table.id='hashT';
+    table.border='1';
+    table.style.color="yellow";
+    table.style.fontFamily="Georgia";
+    
+    var tableBody = document.createElement('TBODY');
+    table.appendChild(tableBody);
+      
+    for (var i=0; i<1; i++){
+       var tr = document.createElement('TR');
+       tableBody.appendChild(tr);
+       
+       for (var j=0; j<20; j++){
+           var td = document.createElement('TD');
+           td.width='75';
+           td.height='100'; td.style.fontSize="70px";
+           td.id='hash'+j;
+           td.appendChild(document.createTextNode(0));
+           tr.appendChild(td);
+       }
+    }
+        for (var i=0; i<1; i++){
+       var tr = document.createElement('TR');
+       tableBody.appendChild(tr);
+       
+       for (var j=0; j<20; j++){
+           var td = document.createElement('TD');
+           td.width='75';
+           td.height='50'; td.style.color="blue"; td.style.fontSize="40px";
+           td.appendChild(document.createTextNode( j));
+           tr.appendChild(td);
+       }
+    }
+
+    canvas.appendChild(table);
+
+}
+
+
+createHashTable();
+
+function updateScreen(){
+	
+	for(var i=0;i<20;i++){
+		if(dom('hashT').rows[0].cells[i].innerHTML==1)
+			dom('screen').innerHTML += dom('hashT').rows[1].cells[i].innerHTML + " , ";
+	}
+
+
+}
+
+
+function pushIntoHash(val){
+  console.log(val);
+  //val=val.slice(-1);
+  vals=val.split(/[\s,]+/);
+  valz=vals[vals.length-1];
+  dom('hashT').rows[0].cells[valz].innerHTML=1*dom('hashT').rows[0].cells[valz].innerHTML + 1;
+
+  //updateScreen();
+}
+
+function find(){
+	for(var i=0;i<20;i++){
+		if(dom('hashT').rows[0].cells[i].innerHTML==1)
+			dom('screen').innerHTML += dom('hashT').rows[1].cells[i].innerHTML + " , ";
+	}
+}
+function reset(){
+	window.location.href="";
+}
+
+
+</script>
+
+<body>
+<br> 
+<div id="screen" style="position:absolute;left:60%;top:65%;height:200px;width:400px;font-family:Georgia;font-size:25px" class="buttons">Unique Elements:</div>
+<p style="position:absolute;left:25%;top:75%">* Web Simulation that finds unique elements & in hash table<br>
+* Enter numbers separated by comma<br>
+* &copy Delta.
+ </p>
+
+
+<input type="text" class="times" style="width:600px;position:absolute;left:0.5%;top:65%" id='arr' autofocus placeholder="Enter the Array using comma" 
+ onkeypress="pushIntoHash(this.value)"><br>
+<div class="times" id="cal" style="cursor:default;position:absolute;left:2.5%;top:75%" onclick="find()" >Find</div><br>
+<div class="times" id="reset" style="cursor:default;position:absolute;left:2.5%;top:85%" onclick="reset()" >Reset</div>
+
+</body>
+</html>
+
