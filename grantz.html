@@ -1,0 +1,380 @@
+<html>
+	<head>
+	
+	<style>
+body{
+	background-color: rgb(101, 194, 105);
+}
+
+
+		#canvas{
+		position: absolute;
+		left: 35%;
+		top:5%;
+		border: 2px blue solid;
+	}
+		#gameoverbanner{
+		position: absolute;
+		left: 35%;
+		top:5%;
+		height:550;
+		width:300;
+		color:white;
+		font-variant: small-caps;
+		font-family: Georgia;
+		font-weight: bolder;
+		font-size: 20px;
+		display: none;
+		background:rgb(229, 128, 144);
+		text-align: center;
+	}
+
+ .buttons{	padding-top: 5px;
+//background-color: #87DFCC;
+//border: 2px blue solid;
+border-radius: 10px;
+text-align: center;
+font-family: Georgia, "Times New Roman", Times, serif;
+color: red;
+cursor: default;
+font-size: 50px;
+
+}
+	</style>
+
+</head>
+	
+	<body>
+		<canvas id="canvas" width="300" height="550"
+style="background-color:#D75873;"></canvas>
+<div id='display' style="color:black;font-family:Georgia;font-variant:small-caps">
+	<span style="color:white;font-weight:bold;font-size:20px" >Controls: </span> <br>
+    Left & Right Arrow keys <br>
+    <span style="color:white;font-weight:bold;font-size:20px" >Instructions:</span><br>
+    Concentrate & Match Same color<br>
+
+    
+
+</div>
+<!--
+<div id='display2' style="color:black;font-family:Georgia;font-variant:small-caps;font-size:150px;position:
+absolute;left:3%">Thank</div>
+<div id='display3' style="position:
+absolute;right:10%;color:black;font-family:Georgia;font-variant:small-caps;font-size:150px">You</div>
+<div id='display4' style="color:black;font-family:Georgia;font-variant:small-caps;font-size:150px;position:
+absolute;left:8%;top:35%">for </div> 
+<div id='display5' style="color:black;font-family:Georgia;font-variant:small-caps;font-size:150px;position:
+absolute;right:8%;top:35%">Your </div>
+<div id='display5' style="color:black;font-family:Georgia;font-variant:small-caps;font-size:150px;position:
+absolute;left:3%;top:55%">Warm </div>
+<div id='display5' style="color:black;font-family:Georgia;font-variant:small-caps;font-size:150px;position:
+absolute;right:5%;top:55%">Wishes </div> --> 
+<script type="text/javascript">
+	var score=0;
+</script>
+
+<div id="gameoverbanner">
+	
+Game is Over <br> <br>
+<canvas id="wheel" style="top:25%;left:0%;position:absolute"></canvas>
+<div class="buttons" onclick=' window.location.href="" '><span style="font-family:cursive;font-size:20px;color:blue">Click To </span><br>Play Again</div>
+<span id='scoretable' style="font-family:cursive"> </span>
+</div>
+
+<script>
+var can = document.getElementById("wheel");
+var ctx2 = can.getContext("2d");
+
+can.width = 300;
+can.height = 300;
+
+var polySide = 10;
+var polygons = [];
+var windowCX = 150;
+var windowCY = 200;
+var windowA = 0;
+
+function polygonPar() {
+    this.x = windowCX;
+    this.y = windowCY;
+    this.r = 40;//5 * entity.r;
+    this.c = "rgba(0,0,0,1)"; //lineColour
+    this.w = 3;  //width
+}
+
+polygons.push(new polygonPar());
+
+function polygonRender() {
+	for(var i=0;i<1;i++) {
+        for(var j=0;j<polySide;j++) {
+            ctx2.beginPath();
+			ctx2.moveTo(windowCX,windowCY);
+            ctx2.lineTo(windowCX+polygons[i].r*Math.cos((windowA+j*360/polySide)*Math.PI/180),windowCY+polygons[i].r*Math.sin((windowA+j*360/polySide)*Math.PI/180));
+            //j++;
+            //ctx.lineTo(windowCX+polygons[i].r*Math.cos((windowA+j*360/polySide)*Math.PI/180),windowCY+polygons[i].r*Math.sin((windowA+j*360/polySide)*Math.PI/180));
+            ctx2.arc(windowCX,windowCY,polygons[i].r,(windowA+j*360/polySide)*Math.PI/180,(windowA+(j+1)*360/polySide)*Math.PI/180);
+			//j--;
+			ctx2.lineTo(windowCX,windowCY);
+            ctx2.strokeStyle = polygons[i].c;
+            ctx2.lineWidth = polygons[i].w;
+            ctx2.stroke();
+			ctx2.fillStyle = (j%2)?"rgb(0,0,0)":"rgb(255,255,255)";
+			ctx2.fill();
+            ctx2.closePath();
+        }
+	}
+}
+
+function render() {
+	ctx2.clearRect(0,0,can.width,can.height);
+	polygonRender();
+	windowA++;
+}
+
+var wheeltimer=setInterval(render,10);
+
+
+
+
+</script>
+
+		<script>
+	
+var dom=function(idd){
+  return document.getElementById(idd);
+}
+
+
+			var canvas = document.getElementById("canvas");
+			var ctx = canvas.getContext("2d");
+			var r,R;
+			var wcx,wcy;
+			var a = 90;
+			var rotate = false;
+			var left=false;
+			var right=false;
+			var speed = 10;
+			var direction='clock';
+			var colors=['red','#8668B2'];
+			 var helpingColors=['yellow','#68B282','#202221','#5BC1D3',
+			 'rgb(153, 28, 28)','rgb(28, 153, 82)','rgb(36, 23, 234)','rgb(50, 247, 7)'];
+            var balls=[];
+            var topColorIndex=1;
+            var bottomColorIndex=0;
+
+			document.addEventListener("keydown",function (e) {
+
+
+
+
+				if(e.keyCode==37){
+              		rotate = true;
+              		left=true; direction='anticlock';
+              		
+                    topColorIndex=(topColorIndex==0)?1:0;
+                    bottomColorIndex=(bottomColorIndex==0)?1:0;
+
+
+
+            };
+         
+               if(e.keyCode==39){
+        	     rotate=true;
+                 right=true; direction='clock';
+                 
+                 topColorIndex=(topColorIndex==0)?1:0;
+                 bottomColorIndex=(bottomColorIndex==0)?1:0;
+
+
+
+              
+               };
+
+			});
+var scoreLIst=[];
+
+function SaveDatFileBro(localstorage) {
+  localstorage.root.getFile("scores.txt", {create: true}, function(DatFile) {
+    DatFile.createWriter(function(DatContent) {
+      var blob = new Blob(["Lorem Ipsum"], {type: "text/plain"});
+      DatContent.write(blob);
+    });
+  });
+}
+
+
+
+function gameover(){
+   clearInterval(timer);
+  dom('gameoverbanner').style.display='block';
+  dom('scoretable').innerHTML='Score: '+ score;
+//  writeScores(score);
+
+window.webkitRequestFileSystem(window.PERSISTENT , 1024*1024, SaveDatFileBro);
+}
+
+
+	
+
+var yA=-10;
+var bottomCord=canvas.height+20;
+var colorIndex=[0,1];
+var colorInd=0;
+var stateCord=[-10,520];
+var ColorData;
+var ballspeed=2;
+//var score =0;
+var clrPtr=-1;
+var MOD=helpingColors.length;
+function callA(){
+   
+	ctx.beginPath();
+	ctx.fillStyle=colors[colorInd];
+	ctx.arc(wcx,yA,20,0,Math.PI*2,true);
+	ctx.closePath();
+	ctx.fill();
+     var tempColorIndex=colorInd;
+	if( yA>wcy-40 && yA<wcy ){
+	  yA=stateCord[Math.floor(Math.random()*2)];
+	  colorInd=colorIndex[Math.floor(Math.random()*2)];
+          //   dom('display').innerHTML=colors[tempColorIndex] + ' hits';
+         //dom('display').innerHTML=colors[tempColorIndex] +' ' + colors[topColorIndex] +' hits';
+      
+
+                  if(tempColorIndex==topColorIndex){
+                  	score++; clrPtr++;
+        	        // dom('display2').innerHTML= 'Total' + score ;
+        	         colors[0]=helpingColors[clrPtr%MOD];
+        	         colors[1]=helpingColors[(clrPtr+1)%MOD];
+                  }
+        	      else{
+        	      	 gameover();
+        	      	//score--;
+        	      	  //alert('game over');
+        	      	 // dom('display2').innerHTML= 'Total '+ score;
+        	      }
+	  
+	  }
+
+	
+    if( yA<wcy+40 && yA>wcy){
+	  yA=stateCord[Math.floor(Math.random()*2)];
+      colorInd=colorIndex[Math.floor(Math.random()*2)];
+
+       // dom('display').innerHTML=colors[tempColorIndex] +' ' + colors[bottomColorIndex] +' hits';
+
+
+
+             if(tempColorIndex==bottomColorIndex){
+             	  score++; clrPtr++;
+                //  dom('display2').innerHTML='Total ' + score;
+                    colors[0]=helpingColors[clrPtr%MOD];
+        	         colors[1]=helpingColors[(clrPtr+1)%MOD];
+              }
+        	      else{
+        	      	//score--;
+                      gameover();
+                    //alert('game over');
+        	      	//  dom('display2').innerHTML='Total ' + score;
+        	      }
+     
+    }
+
+     //colorInd=colorIndex[Math.floor(Math.random()*2)];
+   
+	  if(yA<wcy-40){
+       yA+=ballspeed;
+	  }
+
+	  else if(yA>wcy+40){
+	  	yA-=ballspeed;
+      }
+       
+		ballspeed+=0.001;
+	    
+	    if(ballspeed>3)
+	    	ballspeed=3;
+
+	}
+
+
+var timer=setInterval(callA,10);
+
+
+
+
+
+			function update () {
+				
+				if(direction=='clock'){
+				a += speed;}
+				if(direction=='anticlock'){
+				a -= speed;}
+
+				x1 = wcx + R * Math.cos(a*Math.PI/180);
+				y1 = wcy + R * Math.sin(a*Math.PI/180);
+
+				x2 = wcx + R * Math.cos((a+180)*Math.PI/180);
+                y2 = wcy + R * Math.sin((a+180)*Math.PI/180);
+
+				if((a-90)%180 == 0) rotate = false;
+			  
+
+
+
+			}
+
+			function init () {
+   
+				R = 20;
+				r = 20;
+				wcx = canvas.width / 2;
+				wcy = canvas.height / 2;
+
+				x1 = wcx + R * Math.cos(a*Math.PI/180);
+                y1 = wcy + R * Math.sin(a*Math.PI/180);
+
+                x2 = wcx + R * Math.cos((a+180)*Math.PI/180);
+                y2 = wcy + R * Math.sin((a+180)*Math.PI/180);
+			}
+
+			function drwaA(){
+				
+				ctx.beginPath();
+				ctx.fillStyle = colors[0];
+				ctx.arc(x1,y1,r,0,2*Math.PI);
+				ctx.closePath();
+				ctx.fill();
+
+
+			}
+
+			function drawB(){
+				ctx.beginPath();
+				ctx.fillStyle=colors[1];
+				ctx.arc(x2,y2,r,0,2*Math.PI);
+				ctx.closePath();
+				ctx.fill();
+
+			}
+
+			function draw () {
+				ctx.fillStyle = "rgba(0,0,0,0.2)";
+				ctx.fillRect(0,0,canvas.width,canvas.height);
+
+				if(rotate==true && left==true) {update(); }
+
+				if(rotate==true && right==true){update(); }
+
+				 drwaA();
+				 drawB();
+
+
+
+			}
+
+			init();
+			setInterval(draw,10);
+		</script>
+	</body>
+</html>
